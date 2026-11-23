@@ -1,0 +1,73 @@
+# CaféAroma: estado final de la UT1 (punto de partida de la UT2)
+name: cafearoma
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - wp_html:/var/www/html:ro
+    depends_on:
+      - php
+      - wordpress
+
+  php:
+    build: ./php
+    volumes:
+      - ./web:/usr/share/nginx/html
+      - wp_html:/var/www/html:ro
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Falta el fichero .env. Ejecuta cp .env.example .env}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASS}
+      WP_DB_NAME: ${WP_DB_NAME}
+      WP_DB_USER: ${WP_DB_USER}
+      WP_DB_PASS: ${WP_DB_PASS}
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  wordpress:
+    image: wordpress:6-php8.3-fpm-alpine
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: ${WP_DB_NAME}
+      WORDPRESS_DB_USER: ${WP_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WP_DB_PASS}
+      WORDPRESS_TABLE_PREFIX: ca_
+    volumes:
+      - wp_html:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  dbdata:
+  wp_html:
