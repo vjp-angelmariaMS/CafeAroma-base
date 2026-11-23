@@ -5,7 +5,7 @@ services:
   web:
     image: nginx:alpine
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - ./web:/usr/share/nginx/html:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
@@ -57,6 +57,7 @@ services:
       WORDPRESS_TABLE_PREFIX: ca_
     volumes:
       - wp_html:/var/www/html
+      - ./wordpress/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     depends_on:
       db:
         condition: service_healthy
