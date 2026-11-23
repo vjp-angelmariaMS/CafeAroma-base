@@ -1,8 +1,0 @@
-DB_NAME=cafearoma
-DB_USER=cafearoma_app
-DB_PASS=1234
-DB_ROOT_PASSWORD=1234
-
-WP_DB_NAME=cafearoma_blog
-WP_DB_USER=blog_user
-WP_DB_PASS=12345
